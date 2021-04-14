@@ -26,15 +26,29 @@ class Individuo{
     status = ss;
     permissao_retirada = pr;
   }
+  String retornaNome(){return nome;}
+  String retornaStatus(){return status;}
+  boolean retornaPermissao(){return permissao_retirada;}
 }
 
 class Brochura{
-  protected String nome;
-  protected String autor;
-  protected String ISBN;
-  protected boolean status_retirada;
-  protected int quantidade_in_situ;
-  protected int quantidade_disponivel;
+   protected String nome;
+   protected String autor;
+   protected String ISBN;
+   protected int quantidade_in_situ;
+   protected int quantidade_disponivel;
+   public Brochura(String nn, String aut, int qtd){
+      nome = nn;
+      autor = aut;
+      //ISBN = gera_isbn();
+      quantidade_in_situ = qtd;
+      quantidade_disponivel = qtd;
+   }
+   public String retornaNome(){return nome;}
+   public String retornaAutor(){return autor;}
+   public String retornaISBN(){return ISBN;}
+   public int retornaInSitu(){return quantidade_in_situ;}
+   public int retornaDisponivel(){return quantidade_disponivel;}
 }
 
 //============================================================================//
@@ -42,20 +56,28 @@ class Brochura{
 //============================================================================//
 
 class Usuario extends Individuo{
-  public Usuario(String nn, String ss, boolean pr){
-    super(nn, ss, pr);
-  }
-  public void setaPermissao(boolean pp){
-    //modifica a permissão do Usuário para retirada ou não de livros
-    permissao_retirada = pp;
-  }
+   private float valor_multa;
+   public Usuario(String nn, String ss, boolean pr){
+       super(nn, ss, pr);
+   }
+   public void setaPermissao(boolean pp){
+     //modifica a permissão do Usuário para retirada ou não de livros, pois,
+     //diferente de funcionários, eles não têm acesso irrestrito aos livros
+     permissao_retirada = pp;
+   }
+   public void setaMulta(tempo){
+      //fórmula para computação da multa;
+   }
+   public float retornaMulta(){return valor_multa;}
 }
 
-class Funcionario extends Individuo{
-  public Funcionario(String nn, String ss){
-    super(nn, ss, true);
-  }
 
+class Funcionario extends Individuo{
+   public Funcionario(String nn, String ss){
+   //terceiro argumento de super em true implia em funcionários terem acesso
+   //irrestrito aos livros da biblioteca, sem necessidade de manutenção
+   super(nn, ss, true);
+   }
 }
 
 

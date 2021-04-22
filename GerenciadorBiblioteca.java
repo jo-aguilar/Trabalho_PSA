@@ -245,8 +245,8 @@ public class GerenciadorBiblioteca{
          //remoção
          if(lista.size()==0){
             //interrupção da rotina em caso de lista vazia
-            System.out.println("Lista vazia: impossivel executar remoção\n"+ 
-                               "Retornando para menu principal...\n");
+            System.out.println("Lista vazia: impossivel executar remoção.\n"+ 
+                  "Retornando para menu principal...\n");
             return;
          }
          System.out.print("Procurar por indivíduo por nome[N/n] ou RG[R/r]?\n>> ");
@@ -256,7 +256,7 @@ public class GerenciadorBiblioteca{
                   entrada.equals("r") || entrada.equals("n"))
                break;
             else{
-               System.out.print("Por favor, entre com um tipo válido de busca\n" +
+               System.out.print("Por favor, entre com um tipo válido de busca.\n" +
                      "Nome[N/n] ou RG[R/r]\n>>: ");
                entrada = teclado2.nextLine();
             }
@@ -298,25 +298,90 @@ public class GerenciadorBiblioteca{
          insere_individuo(lista);
       }
    }
-   
-   static public Usuario retorna_usuario(ArrayList<Usuario> lista){
-      Scanner teclado2 = new Scanner(System.in);
-      String nome;
-      System.out.print("Nome: ");
-      nome =  teclado2.nextLine();
+
+   static public int retorna_indice_usuario(ArrayList<Usuario> lista, String usuario){
+      //retorna o índice de um usuário buscado na lista caso ele esteja
+      //cadastrado
       for(int clk = 0; clk<lista.size(); clk++){
-         if((lista.get(clk).retornaNome()).equals(nome)){
-            return lista.get(clk); //retorna o usuário 
+         if((lista.get(clk).retornaNome()).equals(usuario)){
+            return clk; 
          }
       }
-      return (new Usuario("", 111111111));
+      return -1;
    }
 
-   static public void administra_livros(){
-      return;
+   static public int retorna_indice_volume(ArrayList<Brochura> lista, String volume){
+      //retorna o índice de uma brochura buscada na lista caso ela
+      //exista nos registros da biblioteca
+      for(int clk = 0; clk < lista.size(); clk++){
+         if((lista.get(clk).retornaNome()).equals(volume))
+            return clk;
+      }
+      return -1;
    }
 
-   
+   static public void administra_livros(ArrayList<Brochura>brochuras,
+                                        ArrayList<Usuario> usuarios){
+      //requisita e verifica a integridade dos dados de usuário e volume
+      //a ser retirado das dependências da biblioteca. Em caso de integridade
+      //verifica a disponibilidade de retirada por quantidade de volumes e 
+      //falta de pendências por parte do usuário
+      Scanner teclado2 = new Scanner(System.in);
+      String procedimento;
+      System.out.println("Efetuar retirada ou devolução de volume?\n" + 
+                         "[ret]: retirada \t\t [dev]: devolução\n>>");
+      procedimento = teclado2.nextLine();
+      while(true){
+         if(procedimento.equals("ret") || procedimento.equals("dev") ||
+            procedimento.equals("quit") || procedimento.equals("q"))
+               break;
+         else{
+            System.out.print("Procedimento não encontrado.\n"+ 
+                             "Por favor, entre com um procedimento válido" + 
+                             "[ret]: retirada \t\t [dev]: devolução\n>>");
+            procedimento = teclado2.nextLine();
+         }
+         
+         if(procedimento.equals("quit")||procedimento.equals("q"))
+            System.exit(0);
+         else{
+            //retirada ou devolução
+            String nome, volume;
+
+            System.out.print("Usuário: "); 
+            nome = teclado2.nextLine();
+            System.out.print("Volume : ");
+            volume = teclado2.nextLine();
+            final int indice_usuario  = retorna_indice_usuario(usuarios, nome);
+            final int indice_brochura = retorna_indice_volume(brochuras, volume);
+            
+            //usuário ou volume não encontrados entre dados da biblioteca
+            if(indice_usuario==-1){
+               System.out.println("Usuário não cadastrado. Impossível efetuar retirada\n"+
+                                  "Retornando ao menu principal...\n");
+               return;
+            }
+            if(indice_brochura==-1){
+               System.out.println("Volume não encontrado. Impossível efetuar retirada\n"+
+                                  "Retornando ao menu principal...\n");
+               return;
+            }
+
+            if(procedimento.equals("ret")){
+            //caso haja integridade dos dados, efetua-se a retirada, sendo o caso
+               brochuras.get(indice_brochura).diminuiInSitu();
+               usuarios.get(indice_usuario).adicionaLivro((Livro)brochuras.get(indice_brochura));
+            }
+            else{
+               ;;//devolução
+            }
+
+
+         }
+      }
+   }
+
+
    /////////////////////////////////// MAIN ////////////////////////////////////////
    static public void main(String[]args){
       Scanner teclado = new Scanner(System.in);
@@ -363,13 +428,13 @@ public class GerenciadorBiblioteca{
             //mostra uma mensagem de erro
             if(usuarios.size()==0){
                System.out.println("Lista vazia: impossível executar visualização.\n"+
-                                  "Retornando para menu principal...\n");
-               }
-               else{
-                  label_usuario();
-                     for(Individuo n: usuarios)
-                        mostra_individuo(n);
-               }
+                     "Retornando para menu principal...\n");
+            }
+            else{
+               label_usuario();
+               for(Individuo n: usuarios)
+                  mostra_individuo(n);
+            }
          }
          else if(entrada.equals("lis"))
             //mostra novamente o cabeçalho do programa para reinformar
@@ -412,7 +477,7 @@ class Individuo{
    String retornaRG(){
       //retorna o RG em forma de uma String legível sistematicamente
       String auxiliar = Integer.toString(rg);
-      return (auxiliar.substring(0, 7) + "-" + auxiliar.substring(8));
+      return (auxiliar.substring(0, 8) + "-" + auxiliar.substring(8,9));
    }
    int retornaRGn(){ return rg;}//retorna a versão numérica do RG
 }
@@ -443,9 +508,24 @@ class Brochura{
    public String retornaISBN(){return ISBN;}
    public int retornaInSitu(){return quantidade_in_situ;}
    public int retornaDisponivel(){return quantidade_disponivel;}
-
    public boolean retornaRetirada(){return retirada;}
    public boolean retornaDevolucao(){return devolucao;}
+   public void setaISBN(String isbn){ISBN = isbn;}
+   public void diminuiInSitu(){
+      //caso ainda haja livros in situ, diminuir em um volume (retirada)
+      if(quantidade_in_situ>0)
+         quantidade_in_situ--;
+      else
+         return;
+      }
+   public void aumentarInSitu(){
+      //caso nem todos os livros estejam in situ, aumentar em um volume (entrega)
+      if(quantidade_in_situ<quantidade_disponivel)
+         quantidade_in_situ++;
+      else
+         return;
+   }
+
 
    private StringBuilder geraISBN(){
       /*Gera um registro aleatório de ISBN para que uma brochura qualquer possa
@@ -495,6 +575,7 @@ class Usuario extends Individuo{
       return multa_aux;
    }
    public ArrayList<Brochura> retornaLista(){return livros_retirados;}
+   public void adicionaLivro(Livro livro){livros_retirados.add(livro);}
    public void setaExcedente(int dias){dias_excedentes = dias;}
    public float retornaMulta(){return setaMulta(dias_excedentes);}
 
@@ -513,6 +594,12 @@ class Livro extends Brochura{
    //livro deve ser retirado e devolvido
    public Livro(String nn, String au, int qtd){
       super(nn, au, qtd, true, true);
+   }
+   public Livro(Livro livro){
+      super(livro.retornaNome(),
+            livro.retornaAutor(),
+            1, true, true);
+      super.setaISBN(livro.retornaISBN());
    }
 }
 

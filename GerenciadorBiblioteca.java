@@ -34,10 +34,10 @@ public class GerenciadorBiblioteca{
             "Para o gerenciamento de fluxo, utilize o programa com os seguintes\n" + 
             "comandos:\n"+
             "[liv]: gerenciamento de livros    [lliv]: mostra lista de brochuras\n"+ 
-            "[cad]: cadastro de indivíduos +   [lcad]: mostra lista de indivíduos\n" + 
+            "[cad]: cadastro de indivíduos     [lcad]: mostra lista de indivíduos\n" + 
             "[pub]: retirada e entrega de volumes\n" + 
-            "[q]/[quit]: fechar o programa\n"+ 
             "[lis]: mostrar esta mensagem novamente\n" +
+            "[q]/[quit]: fechar o programa     [pend] Pendências do usuário\n" +  
             "+==================================================================+\n"
             );
    }
@@ -112,7 +112,8 @@ public class GerenciadorBiblioteca{
       Scanner teclado2 = new Scanner(System.in);
       String tipo, nome, autor;
       int quantidade;
-      System.out.print("Informe o tipo de brochura a ser inserida:\n>>");
+      System.out.print("Informe o tipo de brochura a ser inserida:\n"+
+            " [livro]: livro \t [atlas]: atlas \t [revis]: revista\n>>");
       tipo = teclado2.nextLine();
       while(true){
          if(tipo.equals("livro") || tipo.equals("revis") || 
@@ -373,12 +374,12 @@ public class GerenciadorBiblioteca{
             //caso haja integridade dos dados, efetua-se a retirada, sendo o caso
             if(brochuras.get(indice_brochura).retornaInSitu()==0){
                System.out.println("Impossível executar retirada. Sem volumes disponíveis\n" +
-                     "Retornando para o menu principal...");
+                     "Retornando para o menu principal...\n");
                return;
             }
             if(brochuras.get(indice_brochura).retornaRetirada()==false){
                System.out.println("Impossível executar retirada. Atlas não podem ser retirados\n"+
-                     "Retornado para o menu principal...");
+                     "Retornado para o menu principal...\n");
             }
             brochuras.get(indice_brochura).diminuiInSitu();
             ((Usuario)usuarios.get(indice_usuario)).adicionaLivro((Livro)brochuras.get(indice_brochura));
@@ -389,18 +390,65 @@ public class GerenciadorBiblioteca{
             final int compA = brochuras.get(indice_brochura).retornaInSitu();
             final int compB = brochuras.get(indice_brochura).retornaDisponivel();
             if(compA==compB){
-                  System.out.println("Impossível executar devolução. Todos volumes já no local\n" +
-                        "Retornando para o menu principal...");
-                  return;
-                  }
-                  //aumenta livros in situ da biblioteca e retira o mesmo título da lista de
-                  //volumes em posse do usuário
-               ((Livro)brochuras.get(indice_brochura)).aumentaInSitu();
-               ((Usuario)usuarios.get(indice_usuario)).retiraLivro(volume);
+               System.out.println("Impossível executar devolução. Todos volumes já no local\n" +
+                     "Retornando para o menu principal...");
+               return;
+            }
+            //aumenta livros in situ da biblioteca e retira o mesmo título da lista de
+            //volumes em posse do usuário
+            ((Livro)brochuras.get(indice_brochura)).aumentaInSitu();
+            ((Usuario)usuarios.get(indice_usuario)).retiraLivro(volume);
          }
 
-       }
+      }
    }
+
+   static public void mostra_pendencias(ArrayList<Individuo> lista){
+      //mostra o registro do usuário e a lista de livros que ele tem 
+      //em posse no momento da consulta
+      String nome;
+      String entrada;
+      int rg;
+      Scanner teclado2 = new Scanner(System.in); 
+      System.out.print("Procurar por indivíduo por nome[N/n] ou RG[R/r]?\n>> ");
+      entrada = teclado2.nextLine();
+      while(true){
+         if(entrada.equals("R") || entrada.equals("N") ||
+               entrada.equals("r") || entrada.equals("n"))
+            break;
+         else{
+            System.out.print("Por favor, entre com um tipo válido de busca.\n" +
+                  "Nome[N/n] ou RG[R/r]\n>>: ");
+            entrada = teclado2.nextLine();
+         }
+      }
+      if(entrada.equals("R") || entrada.equals("r")){
+         System.out.print("RG: ");
+         rg = teclado2.nextInt();
+         for(int clk = 0; clk < lista.size(); clk++){
+            if((lista.get(clk)).retornaRGn()==rg){
+               mostra_individuo(lista.get(clk));
+               for(Brochura n: (((Usuario)lista.get(clk)).retornaLista()))
+                  mostra_brochura(n);
+               return;
+            }
+         }
+      }
+      else if(entrada.equals("N") || entrada.equals("n")){
+         System.out.print("Nome: ");
+         nome = teclado2.nextLine();
+         for(int clk = 0; clk < lista.size(); clk++){
+            if((lista.get(clk)).retornaNome().equals(nome)){
+               mostra_individuo(lista.get(clk));
+               for(Brochura n: (((Usuario)lista.get(clk)).retornaLista()))
+                  mostra_brochura(n);
+               return;
+            }
+         }
+      }
+         System.out.println("Sem lista de dados entrada.\n"+ 
+                         "Retornando ao menu principal...\n");
+      }
 
 
    /////////////////////////////////// MAIN ////////////////////////////////////////
@@ -430,6 +478,8 @@ public class GerenciadorBiblioteca{
          }
 
          else if(entrada.equals("pub")){
+            //efetua retirada ou devolução de volumes retirados pelo
+            //usuário
             System.out.println("Retirada e entrega de volumes\n");
             admnistra_livros(livros, usuarios);
          }
@@ -457,6 +507,11 @@ public class GerenciadorBiblioteca{
                for(Individuo n: usuarios)
                   mostra_individuo(n);
             }
+         }
+         else if(entrada.equals("pend")){
+            //mostra o usuário requisitado pelo funcionário e quais livros
+            //estão em sua posse no momento da consulta
+            mostra_pendencias(usuarios);
          }
          else if(entrada.equals("lis"))
             //mostra novamente o cabeçalho do programa para reinformar
@@ -547,7 +602,6 @@ class Brochura{
       else
          return;
    }
-
 
    private StringBuilder geraISBN(){
       /*Gera um registro aleatório de ISBN para que uma brochura qualquer possa

@@ -169,7 +169,7 @@ public class GerenciadorBiblioteca{
                tipo.equals("q") || tipo.equals("quit"))
             break;
          else{
-            System.out.println("ERRO: tipo de usuário não definido. \n" +
+            System.out.print("ERRO: tipo de usuário não definido. \n" +
                   "Entre com um tipo de usuário válido\n>>");
             tipo = teclado2.nextLine();
          }
@@ -299,7 +299,7 @@ public class GerenciadorBiblioteca{
       }
    }
 
-   static public int retorna_indice_usuario(ArrayList<Usuario> lista, String usuario){
+   static public int retorna_indice_usuario(ArrayList<Individuo> lista, String usuario){
       //retorna o índice de um usuário buscado na lista caso ele esteja
       //cadastrado
       for(int clk = 0; clk<lista.size(); clk++){
@@ -320,65 +320,86 @@ public class GerenciadorBiblioteca{
       return -1;
    }
 
-   static public void administra_livros(ArrayList<Brochura>brochuras,
-                                        ArrayList<Usuario> usuarios){
+   static public void admnistra_livros(ArrayList<Brochura>brochuras,
+         ArrayList<Individuo> usuarios){
       //requisita e verifica a integridade dos dados de usuário e volume
-      //a ser retirado das dependências da biblioteca. Em caso de integridade
+      //a ser retirado das dependências da biblioteca. Em caso de integridadei
       //verifica a disponibilidade de retirada por quantidade de volumes e 
       //falta de pendências por parte do usuário
       Scanner teclado2 = new Scanner(System.in);
       String procedimento;
-      System.out.println("Efetuar retirada ou devolução de volume?\n" + 
-                         "[ret]: retirada \t\t [dev]: devolução\n>>");
+      System.out.print("Efetuar retirada ou devolução de volume?\n" + 
+            "[ret]: retirada \t\t [dev]: devolução\n>>");
       procedimento = teclado2.nextLine();
       while(true){
          if(procedimento.equals("ret") || procedimento.equals("dev") ||
-            procedimento.equals("quit") || procedimento.equals("q"))
-               break;
+               procedimento.equals("quit") || procedimento.equals("q"))
+            break;
          else{
             System.out.print("Procedimento não encontrado.\n"+ 
-                             "Por favor, entre com um procedimento válido" + 
-                             "[ret]: retirada \t\t [dev]: devolução\n>>");
+                  "Por favor, entre com um procedimento válido" + 
+                  "[ret]: retirada \t\t [dev]: devolução\n>>");
             procedimento = teclado2.nextLine();
          }
-         
-         if(procedimento.equals("quit")||procedimento.equals("q"))
-            System.exit(0);
-         else{
-            //retirada ou devolução
-            String nome, volume;
-
-            System.out.print("Usuário: "); 
-            nome = teclado2.nextLine();
-            System.out.print("Volume : ");
-            volume = teclado2.nextLine();
-            final int indice_usuario  = retorna_indice_usuario(usuarios, nome);
-            final int indice_brochura = retorna_indice_volume(brochuras, volume);
-            
-            //usuário ou volume não encontrados entre dados da biblioteca
-            if(indice_usuario==-1){
-               System.out.println("Usuário não cadastrado. Impossível efetuar retirada\n"+
-                                  "Retornando ao menu principal...\n");
-               return;
-            }
-            if(indice_brochura==-1){
-               System.out.println("Volume não encontrado. Impossível efetuar retirada\n"+
-                                  "Retornando ao menu principal...\n");
-               return;
-            }
-
-            if(procedimento.equals("ret")){
-            //caso haja integridade dos dados, efetua-se a retirada, sendo o caso
-               brochuras.get(indice_brochura).diminuiInSitu();
-               usuarios.get(indice_usuario).adicionaLivro((Livro)brochuras.get(indice_brochura));
-            }
-            else{
-               ;;//devolução
-            }
-
-
-         }
       }
+
+      if(procedimento.equals("quit")||procedimento.equals("q"))
+         System.exit(0);
+      else{
+         String nome, volume;
+
+         System.out.print("Usuário: "); 
+         nome = teclado2.nextLine();
+         System.out.print("Volume : ");
+         volume = teclado2.nextLine();
+         final int indice_usuario  = retorna_indice_usuario(usuarios, nome);
+         final int indice_brochura = retorna_indice_volume(brochuras, volume);
+
+         //usuário ou volume não encontrados entre dados da biblioteca
+         if(indice_usuario==-1){
+            System.out.println("Usuário não cadastrado. Impossível efetuar retirada\n"+
+                  "Retornando ao menu principal...\n");
+            return;
+         }
+         if(indice_brochura==-1){
+            System.out.println("Volume não encontrado. Impossível efetuar retirada\n"+
+                  "Retornando ao menu principal...\n");
+            return;
+         }
+
+
+         //retirada
+         if(procedimento.equals("ret")){
+            //caso haja integridade dos dados, efetua-se a retirada, sendo o caso
+            if(brochuras.get(indice_brochura).retornaInSitu()==0){
+               System.out.println("Impossível executar retirada. Sem volumes disponíveis\n" +
+                     "Retornando para o menu principal...");
+               return;
+            }
+            if(brochuras.get(indice_brochura).retornaRetirada()==false){
+               System.out.println("Impossível executar retirada. Atlas não podem ser retirados\n"+
+                     "Retornado para o menu principal...");
+            }
+            brochuras.get(indice_brochura).diminuiInSitu();
+            ((Usuario)usuarios.get(indice_usuario)).adicionaLivro((Livro)brochuras.get(indice_brochura));
+         }
+         else{
+
+            //caso haja integridade dos dados, efetua-se a retirada, sendo o caso
+            final int compA = brochuras.get(indice_brochura).retornaInSitu();
+            final int compB = brochuras.get(indice_brochura).retornaDisponivel();
+            if(compA==compB){
+                  System.out.println("Impossível executar devolução. Todos volumes já no local\n" +
+                        "Retornando para o menu principal...");
+                  return;
+                  }
+                  //aumenta livros in situ da biblioteca e retira o mesmo título da lista de
+                  //volumes em posse do usuário
+               ((Livro)brochuras.get(indice_brochura)).aumentaInSitu();
+               ((Usuario)usuarios.get(indice_usuario)).retiraLivro(volume);
+         }
+
+       }
    }
 
 
@@ -410,6 +431,7 @@ public class GerenciadorBiblioteca{
 
          else if(entrada.equals("pub")){
             System.out.println("Retirada e entrega de volumes\n");
+            admnistra_livros(livros, usuarios);
          }
 
          else if(entrada.equals("llivs")){
@@ -518,7 +540,7 @@ class Brochura{
       else
          return;
       }
-   public void aumentarInSitu(){
+   public void aumentaInSitu(){
       //caso nem todos os livros estejam in situ, aumentar em um volume (entrega)
       if(quantidade_in_situ<quantidade_disponivel)
          quantidade_in_situ++;
@@ -579,6 +601,16 @@ class Usuario extends Individuo{
    public void setaExcedente(int dias){dias_excedentes = dias;}
    public float retornaMulta(){return setaMulta(dias_excedentes);}
 
+   public void retiraLivro(String nome){
+      //retira um livro da lista de livros em posse do usuário
+      //caso exista
+      for(int clk = 0; clk < livros_retirados.size(); clk++){
+         if(livros_retirados.get(clk).retornaNome().equals(nome)){
+            livros_retirados.remove(clk);
+            return;
+         }
+      }
+   }
 }
 
 class Funcionario extends Individuo{
